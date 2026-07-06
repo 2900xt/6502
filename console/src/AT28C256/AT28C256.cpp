@@ -99,9 +99,9 @@ bool self_test()
     {
         uint16_t addr = rand() % EEPROM_SIZE;
         uint8_t old_byte = read_byte(addr);
-        uint8_t new_byte = rand();
-        write_byte(addr, new_byte);
-        if(read_byte(addr) != new_byte) 
+        write_byte(addr, 0xAA);
+        write_byte((addr + 1) % EEPROM_SIZE, 0x55);
+        if(read_byte(addr) != 0xAA || read_byte((addr+1) % EEPROM_SIZE) != 0x55) 
         {
             Serial.print("SELF TEST FAIL: 0x");
             Serial.print(addr, HEX);
@@ -214,6 +214,8 @@ void loop()
 
         Serial.println("READ BYTE    'r <addr>'");
         Serial.println("             'r FFFC' -> 'A5'");
+
+        Serial.println("RESET        'R'");
     }
     else if(input_buffer[0] == 'w')
     {
@@ -248,6 +250,11 @@ void loop()
 
         uint8_t byte = read_byte(addr);
         Serial.println(byte, HEX);
+    }
+    else if(input_buffer[0] == 'R')
+    {
+        void (*reset)(void) = 0x0000;
+        reset();
     }
     else goto invalid_cmd;
 

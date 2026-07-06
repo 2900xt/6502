@@ -47,5 +47,6 @@ void loop()
         }
     }
 
-    Serial.println("ERR: Invalid Chip Number");
+    Serial.print("ERR: Invalid Chip Number: ");
+    Serial.println((char)chip_num);
 }
