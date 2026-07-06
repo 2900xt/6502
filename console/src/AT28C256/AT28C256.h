@@ -69,6 +69,8 @@ constexpr uint8_t PIN_CE = CHIP_TO_ARDUINO[CP_CE]; // active low
 constexpr uint8_t PIN_OE = CHIP_TO_ARDUINO[CP_OE]; // active low
 constexpr uint8_t PIN_WE = CHIP_TO_ARDUINO[CP_WE]; // active low
 
+constexpr uint32_t EEPROM_SIZE = 32786;
+
 bool setup();
 void loop();
 
