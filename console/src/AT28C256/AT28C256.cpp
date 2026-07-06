@@ -88,12 +88,13 @@ void write_byte(uint16_t addr, uint8_t byte)
     
     latchWE(HIGH);
 
-    delay(1);
+    // poll IO7
+    while((read_byte(addr) & 0x80) != (byte & 0x80));
 }
 
 bool self_test()
 {
-    srand(time(NULL));
+    srand(micros());
     for(int i = 0; i < 32; i++)
     {
         uint16_t addr = rand() % EEPROM_SIZE;
@@ -104,6 +105,7 @@ bool self_test()
         {
             Serial.print("SELF TEST FAIL: 0x");
             Serial.print(addr, HEX);
+            Serial.println();
             return false;
         }
 
@@ -112,9 +114,12 @@ bool self_test()
         {
             Serial.print("SELF TEST FAIL: 0x");
             Serial.print(addr, HEX);
+            Serial.println();
             return false;
         }
     }
+
+    Serial.println("SELF TEST OK");
 
     return true;
 }
@@ -129,6 +134,10 @@ bool setup()
     pinMode(PIN_OE, OUTPUT);
     pinMode(PIN_WE, OUTPUT);
 
+    g_IO = INPUT;
+    g_WE = LOW;
+    g_OE = LOW;
+
     // Set ADDR pins to output
 
     for(int i = 0; i < 15; i++)
@@ -139,7 +148,10 @@ bool setup()
     // enable the chip
     digitalWrite(PIN_CE, LOW);
 
-    self_test();
+    if(!self_test())
+    {
+        return false;
+    }
 
     Serial.println("--- AT28C256 INIT OK    ---");
     return true;
@@ -150,7 +162,7 @@ uint8_t input_ptr = 0;
 
 void loop()
 {
-    Serial.print("\n>");
+    Serial.print(">");
     input_ptr = 0;
     memset(input_buffer, 0, 64);
 
@@ -167,37 +179,43 @@ void loop()
             {
                 input_ptr--;
                 input_buffer[input_ptr] = 0;
+                Serial.print("\b \b");
             }
             continue;
         }
 
-        if(cur == '\n') break;
+        if(cur == '\r') continue;
+
+        if(cur == '\n') 
+        {
+            Serial.println();
+            break;
+        }
 
         input_buffer[input_ptr++] = cur;
 
-        if(input_ptr == 64)
+        if(input_ptr == 63)
         {
             input_ptr--;
-            Serial.print('\b');
+            Serial.print("\b \b");
         }
 
         Serial.print(cur);
     }
 
     // process command
-
-    if(!strcmp(input_buffer, "?"))
+    if(input_buffer[0] == '?')
     {
         // help
-        Serial.print("HELP         '?'");
+        Serial.println("HELP         '?'");
 
-        Serial.print("WRITE BYTE   'w <addr> <byte>'");
-        Serial.print("             'w FFFC A5' -> 'OK");
+        Serial.println("WRITE BYTE   'w <addr> <byte>'");
+        Serial.println("             'w FFFC A5' -> 'OK");
 
-        Serial.print("READ BYTE    'r <addr>'");
-        Serial.print("             'r FFFC' -> 'A5'");
+        Serial.println("READ BYTE    'r <addr>'");
+        Serial.println("             'r FFFC' -> 'A5'");
     }
-    else if(!strcmp(input_buffer, "w"))
+    else if(input_buffer[0] == 'w')
     {
         // write byte
 
@@ -215,9 +233,9 @@ void loop()
         if(*end_ptr != '\0') goto invalid_cmd;
 
         write_byte(addr, byte);
-        Serial.print("OK");
+        Serial.println("OK");
     }
-    else if(!strcmp(input_buffer, "r"))
+    else if(input_buffer[0] == 'r')
     {
         if(input_ptr != 6) goto invalid_cmd;
 
@@ -229,14 +247,14 @@ void loop()
         if(*end_ptr != '\0') goto invalid_cmd;
 
         uint8_t byte = read_byte(addr);
-        Serial.print(byte, HEX);
+        Serial.println(byte, HEX);
     }
     else goto invalid_cmd;
 
     return;
 
 invalid_cmd: 
-    Serial.print("INVALID COMMAND\nUse '?' for help.");
+    Serial.println("INVALID COMMAND. Use '?' for help.");
 }
 
 }

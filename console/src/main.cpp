@@ -19,27 +19,31 @@ void setup()
 
 void loop()
 {
-    Serial.print("CHIP SELECT\n [1] W6502S Monitor\n [2] AT28C256 Monitor\n>");
+    Serial.print("CHIP SELECT\n [0] W6502S Monitor\n [1] AT28C256 Monitor\n>");
     while(!Serial.available())
     {
         delay(10);
     }
 
     uint8_t chip_num = (uint8_t)Serial.read();
+    Serial.print((char)chip_num);
+    Serial.println();
 
     switch (chip_num)
     {
-        case 0:
+        case '0':
         {
             W65C02S::setup();
             while(true) W65C02S::loop();
+            break;
         }
-        case 1:
+        case '1':
         {
             if(AT28C256::setup()) 
             {
                 while(true) AT28C256::loop();
             }
+            break;
         }
     }
 
