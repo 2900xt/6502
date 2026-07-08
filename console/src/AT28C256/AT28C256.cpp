@@ -3,7 +3,7 @@
 #include "Print.h"
 #include <Arduino.h>
 #include <stdlib.h>
-#include <time.h>
+#include <sys/types.h>
 
 namespace AT28C256 
 {
@@ -33,7 +33,7 @@ inline void latchIO(bool state)
     if(g_IO != state)
     {
         g_IO = state;
-        for(int i = 0; i < 8; i++)
+        for(uint8_t i = 0; i < 8; i++)
         {
             pinMode(DATA_PINS[i], state);
         }
@@ -47,7 +47,7 @@ uint8_t read_byte(uint16_t addr)
     latchOE(LOW);
     latchIO(INPUT);
 
-    for(int i = 0; i <= 14; i++)
+    for(uint8_t i = 0; i <= 14; i++)
     {
         uint16_t mask = (1 << i);
         digitalWrite(ADDR_PINS[i], (addr & mask) != 0);
@@ -57,7 +57,7 @@ uint8_t read_byte(uint16_t addr)
     digitalWrite(PIN_OE, LOW);
 
     uint8_t byte = 0;
-    for(int i = 0; i <= 7; i++)
+    for(uint8_t i = 0; i <= 7; i++)
     {
         uint8_t mask = (1 << i);
         bool active = digitalRead(DATA_PINS[i]);
@@ -72,7 +72,7 @@ void write_byte(uint16_t addr, uint8_t byte)
     latchOE(HIGH);
     latchIO(OUTPUT);
 
-    for(int i = 0; i <= 14; i++)
+    for(uint8_t i = 0; i <= 14; i++)
     {
         uint16_t mask = (1 << i);
         digitalWrite(ADDR_PINS[i], (addr & mask) != 0);
@@ -80,7 +80,7 @@ void write_byte(uint16_t addr, uint8_t byte)
 
     latchWE(LOW);
 
-    for(int i = 0; i < 8; i++)
+    for(uint8_t i = 0; i < 8; i++)
     {
         uint8_t mask = (1 << i);
         digitalWrite(DATA_PINS[i], (byte & mask) != 0);
@@ -90,12 +90,58 @@ void write_byte(uint16_t addr, uint8_t byte)
 
     // poll IO7
     while((read_byte(addr) & 0x80) != (byte & 0x80));
+
+    Serial.println("OK");
+}
+
+#define PAGE_SIZE (1 << 6)
+static uint8_t page_write_data[PAGE_SIZE];
+
+void write_page(uint16_t addr)
+{
+    if((addr & ~PAGE_SIZE) != addr)
+    {
+        Serial.println("ERR");
+        return;
+    }
+
+    latchOE(HIGH);
+    latchIO(OUTPUT);
+
+    for(uint8_t i = 6; i <= 14; i++)
+    {
+        uint16_t mask = (1 << i);
+        digitalWrite(ADDR_PINS[i], (addr & mask) != 0);
+    }
+
+    for(uint16_t offset = 0; offset < PAGE_SIZE; offset++)
+    {
+        latchWE(LOW);
+        for(uint8_t i = 0; i < 6; i++)
+        {
+            uint8_t mask = (1 << i);
+            digitalWrite(ADDR_PINS[i], (offset & mask) != 0);
+        }
+
+        for(uint8_t i = 0; i < 8; i++)
+        {
+            uint8_t mask = (1 << i);
+            digitalWrite(DATA_PINS[i], (page_write_data[offset] & mask) != 0);
+        }
+        latchWE(HIGH);
+    }
+    
+    // poll IO7
+    while((read_byte(addr) & 0x80) != (page_write_data[PAGE_SIZE - 1] & 0x80));
+
+    latchWE(LOW);
+    Serial.println("OK");
 }
 
 bool self_test()
 {
     srand(micros());
-    for(int i = 0; i < 32; i++)
+    for(uint8_t i = 0; i < 32; i++)
     {
         uint16_t addr = rand() % EEPROM_SIZE;
         uint8_t old_byte = read_byte(addr);
@@ -140,7 +186,7 @@ bool setup()
 
     // Set ADDR pins to output
 
-    for(int i = 0; i < 15; i++)
+    for(uint8_t i = 0; i < 15; i++)
     {
         pinMode(ADDR_PINS[i], OUTPUT);
     }
@@ -210,12 +256,15 @@ void loop()
         Serial.println("HELP         '?'");
 
         Serial.println("WRITE BYTE   'w <addr> <byte>'");
-        Serial.println("             'w FFFC A5' -> 'OK");
+        Serial.println("             'w FFFC A5' ~> '(OK, ERR)");
 
         Serial.println("READ BYTE    'r <addr>'");
-        Serial.println("             'r FFFC' -> 'A5'");
+        Serial.println("             'r FFFC' ~> '(A5, ERR)'");
 
         Serial.println("RESET        'R'");
+
+        Serial.println("WRITE PAGE   'P <addr>' -> binary data, 64 bytes + 'OK");
+        Serial.println("             'P FF00' -> '\x54\x32\x67...' -> OK ~> (OK, ERR)");
     }
     else if(input_buffer[0] == 'w')
     {
@@ -235,7 +284,6 @@ void loop()
         if(*end_ptr != '\0') goto invalid_cmd;
 
         write_byte(addr, byte);
-        Serial.println("OK");
     }
     else if(input_buffer[0] == 'r')
     {
@@ -256,12 +304,31 @@ void loop()
         void (*reset)(void) = 0x0000;
         reset();
     }
+    else if(input_buffer[0] == 'P')
+    {
+        char addr_hex[5];
+        strncpy(addr_hex, input_buffer + 2, 4);
+
+        char* end_ptr;
+        uint16_t addr = strtol(addr_hex, &end_ptr, HEX);
+        if(*end_ptr != '\0') goto invalid_cmd;
+
+        char OK[2];
+        Serial.readBytes(page_write_data, PAGE_SIZE);
+        Serial.readBytes(OK, 2);
+        if(strcmp("OK", OK) != 0)
+        {
+            goto invalid_cmd;
+        }
+        
+        write_page(addr);
+    }
     else goto invalid_cmd;
 
     return;
 
 invalid_cmd: 
-    Serial.println("INVALID COMMAND. Use '?' for help.");
+    Serial.println("ERR: INVALID COMMAND. Use '?' for help.");
 }
 
 }
