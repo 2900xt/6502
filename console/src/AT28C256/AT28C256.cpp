@@ -1,6 +1,4 @@
 #include "AT28C256.h"
-#include "HardwareSerial.h"
-#include "Print.h"
 #include <Arduino.h>
 #include <stdlib.h>
 #include <sys/types.h>

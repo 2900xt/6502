@@ -1,0 +1,6 @@
+CompileFlags:
+  Add:
+    - --target=avr
+    - -D__AVR_ATmega2560__
+  Remove:
+    - -mmcu=*
