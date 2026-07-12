@@ -66,61 +66,49 @@ enum ChipPin : uint8_t {
 // -----------------------------------------------------------------------------
 const uint8_t CHIP_TO_ARDUINO[41] = {
     /*  0 (unused) */ NC,
-    /*  1 VPB      */ 19,
-    /*  2 RDY      */ 18,
-    /*  3 PHI1O    */ 17,
-    /*  4 IRQB     */ 16,
-    /*  5 MLB      */ 15,
-    /*  6 NMIB     */ 14,
-    /*  7 SYNC     */ 12,
-    /*  8 VDD      */ 23, // +5V power  -- keep NC
-    /*  9 A0       */ 25,
-    /* 10 A1       */ 27,
-    /* 11 A2       */ 29,
-    /* 12 A3       */ 31,
-    /* 13 A4       */ 33,
-    /* 14 A5       */ 35,
-    /* 15 A6       */ 37,
-    /* 16 A7       */ 39,
-    /* 17 A8       */ 41,
-    /* 18 A9       */ 43,
-    /* 19 A10      */ 45,
-    /* 20 A11      */ 47,
-    /* 21 VSS      */ 46, // ground     -- keep NC
-    /* 22 A12      */ 44,
-    /* 23 A13      */ 42,
-    /* 24 A14      */ 40,
-    /* 25 A15      */ 38,
-    /* 26 D7       */ 36,
-    /* 27 D6       */ 34,
-    /* 28 D5       */ 32,
-    /* 29 D4       */ 30,
-    /* 30 D3       */ 28,
-    /* 31 D2       */ 26,
-    /* 32 D1       */ 24,
-    /* 33 D0       */ 22,
-    /* 34 RWB      */ 7,
-    /* 35 NC       */ 6, // no connect -- keep NC
-    /* 36 BE       */ 5,
-    /* 37 PHI2     */ 4, // master clock reference (interrupt-capable pin)
-    /* 38 SOB      */ 3,
-    /* 39 PHI2O    */ 2,
-    /* 40 RESB     */ 13,
+    /*  1 VPB      */ 23,
+    /*  2 RDY      */ 25,
+    /*  3 PHI1O    */ 27,
+    /*  4 IRQB     */ 29,
+    /*  5 MLB      */ 31,
+    /*  6 NMIB     */ 33,
+    /*  7 SYNC     */ 35,
+    /*  8 VDD      */ 37, // +5V power  -- keep NC
+    /*  9 A0       */ 39,
+    /* 10 A1       */ 41,
+    /* 11 A2       */ 43,
+    /* 12 A3       */ 45,
+    /* 13 A4       */ 47,
+    /* 14 A5       */ 19,
+    /* 15 A6       */ 18,
+    /* 16 A7       */ 17,
+    /* 17 A8       */ 16,
+    /* 18 A9       */ 15,
+    /* 19 A10      */ 14,
+    /* 20 A11      */ 8,
+    /* 21 VSS      */ NC, // ground     -- keep NC
+    /* 22 A12      */ 7,
+    /* 23 A13      */ 6,
+    /* 24 A14      */ 5,
+    /* 25 A15      */ 4,
+    /* 26 D7       */ 3,
+    /* 27 D6       */ 2,
+    /* 28 D5       */ 46,
+    /* 29 D4       */ 44,
+    /* 30 D3       */ 42,
+    /* 31 D2       */ 40,
+    /* 32 D1       */ 38,
+    /* 33 D0       */ 36,
+    /* 34 RWB      */ 34,
+    /* 35 NC       */ 32, // no connect -- keep NC
+    /* 36 BE       */ 30,
+    /* 37 PHI2     */ 28, // master clock reference (interrupt-capable pin)
+    /* 38 SOB      */ 26,
+    /* 39 PHI2O    */ 24,
+    /* 40 RESB     */ 22,
 };
 
-// -----------------------------------------------------------------------------
-// Sampling behaviour.
-// -----------------------------------------------------------------------------
-// The clock reference for sampling is PHI2O (chip pin 39), the buffered
-// in-phase phase-2 clock output. The 6502 puts a valid address on the bus
-// during PHI2-low and latches/presents data around the PHI2 rising edge; the
-// whole cycle's bus contents are valid and stable while PHI2 is HIGH. We
-// therefore sample one snapshot per clock cycle on the RISING edge of PHI2O.
-// Set to FALLING if your build prefers it. PHI2O (pin 39) must be on an
-// interrupt-capable Mega pin (2, 3, 18, 19, 20, 21).
-#define SAMPLE_EDGE RISING
-
-void setup();
+bool setup();
 void loop();
 
-} // namespace W65C02S
+// namespace W65C02S

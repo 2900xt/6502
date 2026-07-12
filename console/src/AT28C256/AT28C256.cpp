@@ -1,5 +1,6 @@
 #include "AT28C256.h"
 #include <Arduino.h>
+#include <cstdint>
 #include <stdlib.h>
 #include <sys/types.h>
 
@@ -84,7 +85,7 @@ void write_byte(uint16_t addr, uint8_t byte) {
 static uint8_t page_write_data[PAGE_SIZE];
 
 void write_page(uint16_t addr) {
-    if ((addr & ~PAGE_SIZE) != addr) {
+    if (((addr >> 6) << 6) != addr) {
         Serial.println("ERR");
         return;
     }
@@ -103,21 +104,29 @@ void write_page(uint16_t addr) {
             digitalWrite(ADDR_PINS[i], (offset & mask) != 0);
         }
 
+        latchWE(LOW);
+
         for (uint8_t i = 0; i < 8; i++) {
             uint8_t mask = (1 << i);
             digitalWrite(DATA_PINS[i], (page_write_data[offset] & mask) != 0);
         }
 
-        latchWE(LOW);
-        delayMicroseconds(10);
         latchWE(HIGH);
     }
 
+    uint16_t last_addr = addr + PAGE_SIZE - 1;
     // poll IO7
-    while ((read_byte(addr) & 0x80) != (page_write_data[PAGE_SIZE - 1] & 0x80))
-        ;
+    uint32_t ms_start = millis();
+    while ((read_byte(last_addr) & 0x80) !=
+           (page_write_data[PAGE_SIZE - 1] & 0x80)) {
+        uint32_t elapsed = millis() - ms_start;
+        if (elapsed > 10) {
+            // 10 ms timeout
+            Serial.println("ERR");
+            return;
+        }
+    }
 
-    latchWE(LOW);
     Serial.println("OK");
 }
 
@@ -285,7 +294,7 @@ void loop() {
         if (*end_ptr != '\0')
             goto invalid_cmd;
 
-        char OK[2];
+        char OK[3];
         Serial.readBytes(page_write_data, PAGE_SIZE);
         Serial.readBytes(OK, 2);
         if (strcmp("OK", OK) != 0) {

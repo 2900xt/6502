@@ -51,15 +51,15 @@ def main():
         exit(0)
     
     with tqdm(total=0x8000, unit="B", unit_scale=True, desc="Uploading") as pbar:
-        for addr in range(len(bin)):
-            byte = bin[addr]
-            payload = f'w {addr:04x} {byte:02x}\r\n'
-            ser.write(payload.encode("utf-8"))
+        for page_start in range(0, len(bin), 64):
+            ser.write(f'P {page_start}\r\n'.encode('utf-8'));
+            for addr in range(page_start, page_start+64):
+                ser.write(bin[addr])
 
+            ser.write(b'OK')
             resp = ser.read_until(b'>')
             assert resp.endswith(b'>') and (b"OK" in resp)
-
-            pbar.update(1)
+            pbar.update(64)
 
     
 

@@ -44,33 +44,33 @@ enum ChipPin : uint8_t {
 // NC.
 constexpr uint8_t CHIP_TO_ARDUINO[29] = {
     /*  0 (unused) */ NC,
-    /*  1 A14      */ 23,
-    /*  2 A12      */ 25,
-    /*  3 A7       */ 27,
-    /*  4 A6       */ 29,
-    /*  5 A5       */ 31,
-    /*  6 A4       */ 33,
-    /*  7 A3       */ 35,
-    /*  8 A2       */ 37,
-    /*  9 A1       */ 39,
-    /* 10 A0       */ 41,
-    /* 11 I/O0     */ 43,
-    /* 12 I/O1     */ 45,
-    /* 13 I/O2     */ 47,
+    /*  1 A14      */ 5,
+    /*  2 A12      */ 7,
+    /*  3 A7       */ 17,
+    /*  4 A6       */ 18,
+    /*  5 A5       */ 19,
+    /*  6 A4       */ 47,
+    /*  7 A3       */ 45,
+    /*  8 A2       */ 43,
+    /*  9 A1       */ 41,
+    /* 10 A0       */ 39,
+    /* 11 I/O0     */ 36,
+    /* 12 I/O1     */ 38,
+    /* 13 I/O2     */ 40,
     /* 14 GND      */ NC, // ground  -- keep NC
-    /* 15 I/O3     */ 46,
+    /* 15 I/O3     */ 42,
     /* 16 I/O4     */ 44,
-    /* 17 I/O5     */ 42,
-    /* 18 I/O6     */ 40,
-    /* 19 I/O7     */ 38,
-    /* 20 CE#      */ 36, // chip enable,   active low
-    /* 21 A10      */ 34,
-    /* 22 OE#      */ 32, // output enable, active low
-    /* 23 A11      */ 30,
-    /* 24 A9       */ 28,
-    /* 25 A8       */ 26,
-    /* 26 A13      */ 24,
-    /* 27 WE#      */ 22, // write enable,  active low
+    /* 17 I/O5     */ 46,
+    /* 18 I/O6     */ 2,
+    /* 19 I/O7     */ 3,
+    /* 20 CE#      */ 4, // chip enable,   active low
+    /* 21 A10      */ 14,
+    /* 22 OE#      */ NC, // output enable, active low
+    /* 23 A11      */ 8,
+    /* 24 A9       */ 15,
+    /* 25 A8       */ 16,
+    /* 26 A13      */ 6,
+    /* 27 WE#      */ NC, // write enable,  active low
     /* 28 VCC      */ NC, // +5V     -- keep NC
 };
 
