@@ -1,6 +1,6 @@
 #include "AT28C256.h"
+#include "HardwareSerial.h"
 #include <Arduino.h>
-#include <cstdint>
 #include <stdlib.h>
 #include <sys/types.h>
 
@@ -56,6 +56,20 @@ uint8_t read_byte(uint16_t addr) {
     return byte;
 }
 
+bool write_timeout(uint16_t addr, uint8_t byte) {
+    uint32_t ms_start = millis();
+    while ((read_byte(addr) & 0x80) != (byte & 0x80)) {
+        uint32_t elapsed = millis() - ms_start;
+        if (elapsed > 10) {
+            // 10 ms timeout
+            Serial.println("ERR");
+            return false;
+        }
+    }
+
+    return true;
+}
+
 void write_byte(uint16_t addr, uint8_t byte) {
     latchOE(HIGH);
     latchIO(OUTPUT);
@@ -66,7 +80,6 @@ void write_byte(uint16_t addr, uint8_t byte) {
     }
 
     latchWE(LOW);
-
     for (uint8_t i = 0; i < 8; i++) {
         uint8_t mask = (1 << i);
         digitalWrite(DATA_PINS[i], (byte & mask) != 0);
@@ -77,8 +90,6 @@ void write_byte(uint16_t addr, uint8_t byte) {
     // poll IO7
     while ((read_byte(addr) & 0x80) != (byte & 0x80))
         ;
-
-    Serial.println("OK");
 }
 
 #define PAGE_SIZE (1 << 6)
@@ -126,7 +137,6 @@ void write_page(uint16_t addr) {
             return;
         }
     }
-
     Serial.println("OK");
 }
 
@@ -135,14 +145,24 @@ bool self_test() {
     for (uint8_t i = 0; i < 32; i++) {
         uint16_t addr = rand() % EEPROM_SIZE;
         uint8_t old_byte = read_byte(addr);
-        write_byte(addr, 0xAA);
-        write_byte((addr + 1) % EEPROM_SIZE, 0x55);
-        if (read_byte(addr) != 0xAA ||
-            read_byte((addr + 1) % EEPROM_SIZE) != 0x55) {
-            Serial.print("SELF TEST FAIL: 0x");
-            Serial.print(addr, HEX);
-            Serial.println();
-            return false;
+
+        uint8_t bytes[] = {
+            0xAA, 0x55, 0x20, 0x40, 0x60, 0x00, 0xFF,
+        };
+
+        for (int i = 0; i < 7; i++) {
+            write_byte(addr, bytes[i]);
+            uint8_t a = read_byte(addr);
+            if (a != bytes[i]) {
+                Serial.print("SELF TEST FAIL: ");
+                Serial.print(addr, HEX);
+                Serial.print(" act: ");
+                Serial.print(a, HEX);
+                Serial.print(" exp: ");
+                Serial.print(bytes[i], HEX);
+                Serial.println();
+                return false;
+            }
         }
 
         write_byte(addr, old_byte);
@@ -169,8 +189,11 @@ bool setup() {
     pinMode(PIN_WE, OUTPUT);
 
     g_IO = INPUT;
-    g_WE = LOW;
-    g_OE = LOW;
+    g_WE = HIGH;
+    g_OE = HIGH;
+
+    digitalWrite(PIN_WE, HIGH);
+    digitalWrite(PIN_OE, HIGH);
 
     // Set ADDR pins to output
 
@@ -248,6 +271,8 @@ void loop() {
             "WRITE PAGE   'P <addr>' -> binary data, 64 bytes + 'OK");
         Serial.println(
             "             'P FF00' -> '\x54\x32\x67...' -> OK ~> (OK, ERR)");
+
+        Serial.println("SELF TEST    'S'");
     } else if (input_buffer[0] == 'w') {
         // write byte
 
@@ -294,7 +319,7 @@ void loop() {
         if (*end_ptr != '\0')
             goto invalid_cmd;
 
-        char OK[3];
+        char OK[3] = {};
         Serial.readBytes(page_write_data, PAGE_SIZE);
         Serial.readBytes(OK, 2);
         if (strcmp("OK", OK) != 0) {
@@ -302,6 +327,8 @@ void loop() {
         }
 
         write_page(addr);
+    } else if (input_buffer[0] == 'S') {
+        self_test();
     } else
         goto invalid_cmd;
 

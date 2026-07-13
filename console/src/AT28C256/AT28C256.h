@@ -39,39 +39,38 @@ enum ChipPin : uint8_t {
     CP_VCC = 28,
 };
 
-// >>> EDIT ME <<<  Chip pin (1-28)  ->  Arduino Mega digital pin.
 // Index with the chip pin number; index 0 is unused. Power/ground (14, 28) =
 // NC.
 constexpr uint8_t CHIP_TO_ARDUINO[29] = {
     /*  0 (unused) */ NC,
-    /*  1 A14      */ 5,
-    /*  2 A12      */ 7,
-    /*  3 A7       */ 17,
-    /*  4 A6       */ 18,
-    /*  5 A5       */ 19,
-    /*  6 A4       */ 47,
-    /*  7 A3       */ 45,
-    /*  8 A2       */ 43,
-    /*  9 A1       */ 41,
-    /* 10 A0       */ 39,
-    /* 11 I/O0     */ 36,
-    /* 12 I/O1     */ 38,
-    /* 13 I/O2     */ 40,
-    /* 14 GND      */ NC, // ground  -- keep NC
-    /* 15 I/O3     */ 42,
-    /* 16 I/O4     */ 44,
-    /* 17 I/O5     */ 46,
-    /* 18 I/O6     */ 2,
-    /* 19 I/O7     */ 3,
-    /* 20 CE#      */ 4, // chip enable,   active low
-    /* 21 A10      */ 14,
-    /* 22 OE#      */ NC, // output enable, active low
-    /* 23 A11      */ 8,
-    /* 24 A9       */ 15,
+    /*  1 A14      */ 7,
+    /*  2 A12      */ 6,
+    /*  3 A7       */ 5,
+    /*  4 A6       */ 4,
+    /*  5 A5       */ 3,
+    /*  6 A4       */ 2,
+    /*  7 A3       */ 46,
+    /*  8 A2       */ 44,
+    /*  9 A1       */ 42,
+    /* 10 A0       */ 40,
+    /* 11 I/O0     */ 38,
+    /* 12 I/O1     */ 36,
+    /* 13 I/O2     */ 34,
+    /* 14 GND      */ 32, // ground  -- keep NC
+    /* 15 I/O3     */ 35,
+    /* 16 I/O4     */ 37,
+    /* 17 I/O5     */ 39,
+    /* 18 I/O6     */ 41,
+    /* 19 I/O7     */ 43,
+    /* 20 CE#      */ 45, // chip enable,   active low
+    /* 21 A10      */ 47,
+    /* 22 OE#      */ 19, // output enable, active low
+    /* 23 A11      */ 18,
+    /* 24 A9       */ 17,
     /* 25 A8       */ 16,
-    /* 26 A13      */ 6,
-    /* 27 WE#      */ NC, // write enable,  active low
-    /* 28 VCC      */ NC, // +5V     -- keep NC
+    /* 26 A13      */ 15,
+    /* 27 WE#      */ 14, // write enable,  active low
+    /* 28 VCC      */ 8,  // +5V     -- keep NC
 };
 
 // Bit-ordered views derived from the chip map above (single source of truth).

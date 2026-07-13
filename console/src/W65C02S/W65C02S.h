@@ -52,8 +52,6 @@ enum ChipPin : uint8_t {
 };
 
 // -----------------------------------------------------------------------------
-// >>> EDIT ME <<<  Chip pin  ->  Arduino Mega digital pin.
-//
 // Index into this array with the chip pin number (1-40); index 0 is unused.
 // Set an entry to NC if that chip pin is not wired to the Arduino.
 //
@@ -111,4 +109,5 @@ const uint8_t CHIP_TO_ARDUINO[41] = {
 bool setup();
 void loop();
 
+}; // namespace W65C02S
 // namespace W65C02S

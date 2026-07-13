@@ -1,14 +1,23 @@
 #!/usr/bin/env python
 
-import serial
 import argparse
 import time
+
+import serial
 from tqdm import tqdm
 
+
 def main():
-    parser = argparse.ArgumentParser(description="at28c256 eeprom programmer using ATMEGA 6502 console")
+    parser = argparse.ArgumentParser(
+        description="at28c256 eeprom programmer using ATMEGA 6502 console"
+    )
     parser.add_argument("filename", type=str, help="path to .BIN file to upload")
-    parser.add_argument("--port", type=str, default='/dev/ttyUSB0', help="serial port running ATMEGA 6502 console")
+    parser.add_argument(
+        "--port",
+        type=str,
+        default="/dev/ttyUSB0",
+        help="serial port running ATMEGA 6502 console",
+    )
     parser.add_argument("--baud", type=int, default=115200, help="baud rate to use")
 
     args = parser.parse_args()
@@ -25,21 +34,21 @@ def main():
 
     # initialize the reader
     try:
-        resp = ser.read_until(b'>')
-        assert resp.endswith(b'>') 
-        
-        ser.write(b'1')
+        resp = ser.read_until(b">")
+        assert resp.endswith(b">")
+
+        ser.write(b"1")
 
         time.sleep(1)
-        resp = ser.read_until(b'>')
-        assert resp.endswith(b'>') and (b"OK" in resp)
+        resp = ser.read_until(b">")
+        assert resp.endswith(b">") and (b"OK" in resp)
     except:
-        print(f"ERROR: chip init failed")
+        print("ERROR: chip init failed")
         exit(0)
-    
+
     # read raw binary file
     try:
-        with open(args.filename, 'rb') as file:
+        with open(args.filename, "rb") as file:
             bin = file.read()
     except:
         print(f"ERROR: file '{args.filename}' read error")
@@ -49,19 +58,20 @@ def main():
     if len(bin) != 0x8000:
         print(f"ERROR: file '{args.filename}' is not 32K bytes")
         exit(0)
-    
-    with tqdm(total=0x8000, unit="B", unit_scale=True, desc="Uploading") as pbar:
-        for page_start in range(0, len(bin), 64):
-            ser.write(f'P {page_start}\r\n'.encode('utf-8'));
-            for addr in range(page_start, page_start+64):
-                ser.write(bin[addr])
 
-            ser.write(b'OK')
-            resp = ser.read_until(b'>')
-            assert resp.endswith(b'>') and (b"OK" in resp)
-            pbar.update(64)
+    try:
+        with tqdm(total=0x8000, unit="B", unit_scale=True, desc="Uploading") as pbar:
+            for page_start in range(0, len(bin), 64):
+                ser.write(f"P {page_start:04X}\n".encode())
+                ser.write(bin[page_start : page_start + 64])
 
-    
+                ser.write(b"OK")
+                response = ser.read_until(b">")
+                assert response.endswith(b">") and (b"OK" in response)
+                pbar.update(64)
+    except:
+        print(response)
+
 
 if __name__ == "__main__":
     main()
