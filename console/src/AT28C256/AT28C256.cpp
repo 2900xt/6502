@@ -1,5 +1,4 @@
 #include "AT28C256.h"
-#include "HardwareSerial.h"
 #include <Arduino.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -79,17 +78,25 @@ void write_byte(uint16_t addr, uint8_t byte) {
         digitalWrite(ADDR_PINS[i], (addr & mask) != 0);
     }
 
-    latchWE(LOW);
     for (uint8_t i = 0; i < 8; i++) {
         uint8_t mask = (1 << i);
         digitalWrite(DATA_PINS[i], (byte & mask) != 0);
     }
 
+    latchWE(LOW);
+    delayMicroseconds(1);
     latchWE(HIGH);
 
     // poll IO7
-    while ((read_byte(addr) & 0x80) != (byte & 0x80))
-        ;
+    uint32_t ms_start = millis();
+    while ((read_byte(addr) & 0x80) != (byte & 0x80)) {
+        uint32_t elapsed = millis() - ms_start;
+        if (elapsed > 10) {
+            // 10 ms timeout
+            Serial.println("WRITE ERR");
+            return;
+        }
+    }
 }
 
 #define PAGE_SIZE (1 << 6)
@@ -115,12 +122,14 @@ void write_page(uint16_t addr) {
             digitalWrite(ADDR_PINS[i], (offset & mask) != 0);
         }
 
-        latchWE(LOW);
-
         for (uint8_t i = 0; i < 8; i++) {
             uint8_t mask = (1 << i);
             digitalWrite(DATA_PINS[i], (page_write_data[offset] & mask) != 0);
         }
+
+        latchWE(LOW);
+
+        delayMicroseconds(1);
 
         latchWE(HIGH);
     }
@@ -137,6 +146,27 @@ void write_page(uint16_t addr) {
             return;
         }
     }
+}
+
+void verify_write_page(uint16_t addr) {
+    if (((addr >> 6) << 6) != addr) {
+        Serial.println("ERR");
+        return;
+    }
+
+    for (uint16_t cur = addr; cur < addr + PAGE_SIZE; cur++) {
+        uint8_t byte = read_byte(cur);
+        if (byte != page_write_data[cur - addr]) {
+            Serial.print("VERIFY ERR at 0x");
+            Serial.print(cur, HEX);
+            Serial.print(": EXP 0x");
+            Serial.print(page_write_data[cur - addr]);
+            Serial.print(" GOT 0x");
+            Serial.println(byte, HEX);
+            return;
+        }
+    }
+
     Serial.println("OK");
 }
 
@@ -279,7 +309,7 @@ void loop() {
         if (input_ptr != 9)
             goto invalid_cmd;
 
-        char addr_hex[5], byte_hex[3];
+        char addr_hex[5] = {}, byte_hex[3] = {};
         strncpy(addr_hex, input_buffer + 2, 4);
         strncpy(byte_hex, input_buffer + 7, 2);
 
@@ -297,7 +327,7 @@ void loop() {
         if (input_ptr != 6)
             goto invalid_cmd;
 
-        char addr_hex[5];
+        char addr_hex[5] = {};
         strncpy(addr_hex, input_buffer + 2, 4);
 
         char *end_ptr;
@@ -311,7 +341,7 @@ void loop() {
         void (*reset)(void) = 0x0000;
         reset();
     } else if (input_buffer[0] == 'P') {
-        char addr_hex[5];
+        char addr_hex[5] = {};
         strncpy(addr_hex, input_buffer + 2, 4);
 
         char *end_ptr;
@@ -327,6 +357,7 @@ void loop() {
         }
 
         write_page(addr);
+        verify_write_page(addr);
     } else if (input_buffer[0] == 'S') {
         self_test();
     } else

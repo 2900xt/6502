@@ -106,6 +106,13 @@ const uint8_t CHIP_TO_ARDUINO[41] = {
     /* 40 RESB     */ 22,
 };
 
+const uint8_t ADDR_PINS[] = {CP_A0,  CP_A1,  CP_A2,  CP_A3, CP_A4,  CP_A5,
+                             CP_A6,  CP_A7,  CP_A8,  CP_A9, CP_A10, CP_A11,
+                             CP_A12, CP_A13, CP_A14, CP_A15};
+
+const uint8_t DATA_PINS[] = {CP_D0, CP_D1, CP_D2, CP_D3,
+                             CP_D4, CP_D5, CP_D6, CP_D7};
+
 bool setup();
 void loop();
 

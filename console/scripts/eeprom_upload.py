@@ -11,7 +11,9 @@ def main():
     parser = argparse.ArgumentParser(
         description="at28c256 eeprom programmer using ATMEGA 6502 console"
     )
-    parser.add_argument("filename", type=str, help="path to .BIN file to upload")
+    parser.add_argument(
+        "--filename", type=str, help="path to .BIN file to upload", default=""
+    )
     parser.add_argument(
         "--port",
         type=str,
@@ -19,6 +21,9 @@ def main():
         help="serial port running ATMEGA 6502 console",
     )
     parser.add_argument("--baud", type=int, default=115200, help="baud rate to use")
+    parser.add_argument(
+        "--byte", type=str, default="", help="write a single byte to the file"
+    )
 
     args = parser.parse_args()
 
@@ -46,17 +51,23 @@ def main():
         print("ERROR: chip init failed")
         exit(0)
 
-    # read raw binary file
-    try:
-        with open(args.filename, "rb") as file:
-            bin = file.read()
-    except:
-        print(f"ERROR: file '{args.filename}' read error")
-        exit(0)
+    if args.filename != "":
+        # read raw binary file
+        try:
+            with open(args.filename, "rb") as file:
+                bin = file.read()
+        except:
+            print(f"ERROR: file '{args.filename}' read error")
+            exit(0)
 
-    # assert file length = 32k
-    if len(bin) != 0x8000:
-        print(f"ERROR: file '{args.filename}' is not 32K bytes")
+        # assert file length = 32k
+        if len(bin) != 0x8000:
+            print(f"ERROR: file '{args.filename}' is not 32K bytes")
+            exit(0)
+    elif args.byte != "":
+        bin = bytes.fromhex(args.byte) * 0x8000
+    else:
+        print("ERROR: NO INPUT FILE SPECIFIED")
         exit(0)
 
     try:
@@ -70,7 +81,10 @@ def main():
                 assert response.endswith(b">") and (b"OK" in response)
                 pbar.update(64)
     except:
-        print(response)
+        print("ERROR: bad response: ", response)
+        exit(0)
+
+    print("------------------ UPLOAD COMPLETE --------------------")
 
 
 if __name__ == "__main__":
