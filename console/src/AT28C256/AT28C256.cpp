@@ -161,7 +161,7 @@ void verify_write_page(uint16_t addr) {
             Serial.print("VERIFY ERR at 0x");
             Serial.print(cur, HEX);
             Serial.print(": EXP 0x");
-            Serial.print(page_write_data[cur - addr]);
+            Serial.print(page_write_data[cur - addr], HEX);
             Serial.print(" GOT 0x");
             Serial.println(byte, HEX);
             return;
@@ -219,7 +219,7 @@ bool setup() {
     digitalWrite(W65C02S::CHIP_TO_ARDUINO[W65C02S::CP_BE], LOW);
 
     pinMode(W65C02S::CHIP_TO_ARDUINO[W65C02S::CP_RESB], OUTPUT);
-    pinMode(W65C02S::CHIP_TO_ARDUINO[W65C02S::CP_RESB], LOW);
+    digitalWrite(W65C02S::CHIP_TO_ARDUINO[W65C02S::CP_RESB], LOW);
 
     pinMode(PIN_CE, OUTPUT);
     pinMode(PIN_OE, OUTPUT);
@@ -231,6 +231,7 @@ bool setup() {
 
     digitalWrite(PIN_WE, HIGH);
     digitalWrite(PIN_OE, HIGH);
+    digitalWrite(PIN_CE, LOW);
 
     // Set ADDR pins to output
 
@@ -238,8 +239,8 @@ bool setup() {
         pinMode(ADDR_PINS[i], OUTPUT);
     }
 
-    // enable the chip
-    digitalWrite(PIN_CE, LOW);
+    // enable the chip (INVERTED EXTERNALLY)
+    digitalWrite(PIN_CE, HIGH);
 
     if (!self_test()) {
         return false;

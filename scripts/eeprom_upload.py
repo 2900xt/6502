@@ -80,7 +80,7 @@ def main():
                 response = ser.read_until(b">")
                 assert response.endswith(b">") and (b"OK" in response)
                 pbar.update(64)
-    except:
+    except Exception:
         print("ERROR: bad response: ", response)
         exit(0)
 
