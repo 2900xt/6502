@@ -1,4 +1,5 @@
 #include "AT28C256.h"
+#include "../W65C02S/W65C02S.h"
 #include <Arduino.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -213,6 +214,12 @@ bool setup() {
     Serial.println("--- AT28C256 INIT BEGIN ---");
 
     // Set CE, OE, and WE as outputs
+
+    pinMode(W65C02S::CHIP_TO_ARDUINO[W65C02S::CP_BE], OUTPUT);
+    digitalWrite(W65C02S::CHIP_TO_ARDUINO[W65C02S::CP_BE], LOW);
+
+    pinMode(W65C02S::CHIP_TO_ARDUINO[W65C02S::CP_RESB], OUTPUT);
+    pinMode(W65C02S::CHIP_TO_ARDUINO[W65C02S::CP_RESB], LOW);
 
     pinMode(PIN_CE, OUTPUT);
     pinMode(PIN_OE, OUTPUT);
