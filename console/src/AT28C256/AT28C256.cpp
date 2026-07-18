@@ -225,6 +225,10 @@ bool setup() {
     pinMode(PIN_OE, OUTPUT);
     pinMode(PIN_WE, OUTPUT);
 
+    // Set A15 HIGH
+    pinMode(W65C02S::CHIP_TO_ARDUINO[W65C02S::CP_A15], OUTPUT);
+    digitalWrite(W65C02S::CHIP_TO_ARDUINO[W65C02S::CP_A15], HIGH);
+
     g_IO = INPUT;
     g_WE = HIGH;
     g_OE = HIGH;
