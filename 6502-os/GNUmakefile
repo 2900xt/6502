@@ -5,9 +5,9 @@ TARGET := build/OS.bin
 MAP := build/OS.map
 LABELS := build/OS.lbl
 
-C_SOURCES := $(wildcard *.c)
-C_OBJECTS := $(patsubst %.c,build/%.o,$(C_SOURCES))
-OBJECTS := build/_start.o $(C_OBJECTS)
+C_SOURCES := $(wildcard src/*.c)
+C_OBJECTS := $(patsubst src/%.c,build/%.o,$(C_SOURCES))
+OBJECTS := build/boot.o $(C_OBJECTS)
 
 CFLAGS := --target none --cpu 65c02 --standard c99 -Oirs -g
 ASFLAGS := --cpu 65c02 -g
@@ -21,10 +21,10 @@ all: $(TARGET)
 $(TARGET): $(OBJECTS) link.cfg | build
 	$(CL65) $(LDFLAGS) -o $@ $(OBJECTS)
 
-build/%.o: %.c | build
+build/%.o: src/%.c | build
 	$(CL65) $(CFLAGS) -c -o $@ $<
 
-build/_start.o: src/_start.S | build
+build/boot.o: src/boot.S | build
 	$(CA65) $(ASFLAGS) -o $@ $<
 
 build:

@@ -5,17 +5,14 @@
         .export __STARTUP__ : absolute = 1
         .export _exit
 
-        .import _main
+        .import __start
         .import __STACKSTART__
         .import __DATA_SIZE__
 
-; Writable initialized globals/statics are forbidden. Uninitialized objects
-; may use BSS, but startup deliberately leaves that RAM untouched.
+; Writable initialized globals/statics are forbidden.
         .assert __DATA_SIZE__ = 0, lderror, "writable initialized globals/statics are forbidden"
 
-; cc65's ABI expects these zero-page symbols. Defining the storage here keeps
-; the project independent from none.lib while still allowing compiled C code
-; to use the compiler's normal calling convention.
+; cc65's ABI expects these zero-page symbols for it's calling covention.
         .exportzp sp, sreg, regsave
         .exportzp ptr1, ptr2, ptr3, ptr4
         .exportzp tmp1, tmp2, tmp3, tmp4, regbank
@@ -49,7 +46,7 @@ reset:
         lda #>__STACKSTART__
         sta sp+1
 
-        jsr _main
+        jsr __start
 
 _exit:
 halt:

@@ -8,7 +8,7 @@ test-upload:
   uv run --with pyserial --with tqdm scripts/eeprom_upload.py --port /dev/ttyUSB0 --byte ea
 
 OS:
-  make -C 6502-os boot_test
+  make -C 6502-os
 
 upload: OS
   uv run --with pyserial --with tqdm scripts/eeprom_upload.py --port /dev/ttyUSB0 --filename 6502-os/build/OS.bin
