@@ -14,3 +14,23 @@ This is all the code I used to debug, test, and build my 6502 breadbaord compute
 
 # Clock speed
 I'm using a 555 astable with a potentiometer to run this computer, clock speed can vary from 0.5hz to ~75khz in testing.
+
+# Symbol-aware CPU trace
+
+`scripts/trace_monitor.py` reads the W65C02S monitor over serial and prints the
+raw address/data lines with decoded opcodes, cc65 symbols, symbolized reads and
+writes, and a JSR/RTS stack trace:
+
+```sh
+uv run --with pyserial scripts/trace_monitor.py --port /dev/ttyUSB0
+```
+
+It loads `6502-os/build/OS.lbl` by default. A captured monitor log can be
+analyzed without pyserial or attached hardware:
+
+```sh
+python scripts/trace_monitor.py --input trace.txt
+```
+
+Use `--symbol NAME=ADDR` to add a hardware or application symbol, and
+`--no-select` when the console is already in the W65C02S monitor.
