@@ -5,7 +5,10 @@ This is all the code I used to debug, test, and build my 6502 breadbaord compute
 # Memory Map
 
 - 0000 to 5FFF is RAM (24K)
-- 6000 to 600F is I/O
+    - 0000 to 00FF is ZP
+    - 0100 to 01FF is 6502 stack
+    - 0200 to 5FFF is cc65 stack and globals
+- 6000 to 600F is MCS6522 I/O
 - 6010 to 7FFF is reserved
 - 8000 to FFFF is EEPROM (32K)
 
