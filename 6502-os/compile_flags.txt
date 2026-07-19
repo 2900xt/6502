@@ -1,0 +1,10 @@
+# AVR is a stand-in target: 16-bit int/pointer like cc65/6502.
+# (clangd has no 6502 target; host x86_64 wrongly treats pointers as 64-bit.)
+--target=avr
+-std=c99
+-ffreestanding
+-nobuiltininc
+-nostdinc
+-Iinclude
+-Wno-unused-parameter
+-Wno-unused-function

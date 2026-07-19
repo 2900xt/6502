@@ -25,6 +25,9 @@ writes, and a JSR/RTS stack trace:
 uv run --with pyserial scripts/trace_monitor.py --port /dev/ttyUSB0
 ```
 
+`just trace` opens the output in `less` follow mode. Press `Ctrl-C` to stop
+following and search with `/`; press `F` to resume following the live trace.
+
 It loads `6502-os/build/OS.lbl` by default. A captured monitor log can be
 analyzed without pyserial or attached hardware:
 

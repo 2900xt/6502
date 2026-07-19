@@ -303,25 +303,36 @@ class TraceAnalyzer:
         value = missing if operands[0] is None else f"{operands[0]:02X}"
         return f"{mnemonic} ${value}"
 
-    def render(self, trace: InstructionTrace) -> None:
+    def render_cycle(self, cycle: BusCycle) -> None:
+        """Render one bus cycle as soon as it arrives from the monitor."""
+        if cycle.sync and cycle.read and not self.stack:
+            self.stack.append(
+                self.symbols.containing_name(cycle.address)
+                or self.symbols.describe(cycle.address)
+            )
+
+        operation = "read" if cycle.read else "WRITE"
+        annotation = f"{operation} {self.symbols.describe(cycle.address)}"
+        if not cycle.read:
+            annotation += f" <= ${cycle.data:02X}"
+        columns = [f"{cycle.raw:<25}", annotation]
+        if cycle.sync and cycle.read:
+            columns.extend(
+                (
+                    f"insn: {OPCODE_NAMES[cycle.data]}",
+                    f"stack: {' > '.join(self.stack)}",
+                )
+            )
+        print(" | ".join(columns), file=self.output, flush=True)
+
+    def complete(self, trace: InstructionTrace) -> None:
+        """Apply effects that require all bus cycles from an instruction."""
         if not self.stack:
             self.stack.append(
                 self.symbols.containing_name(trace.pc) or self.symbols.describe(trace.pc)
             )
 
-        stack_text = " > ".join(self.stack)
-        disassembly = self._disassemble(trace)
-        for index, cycle in enumerate(trace.cycles):
-            operation = "read" if cycle.read else "WRITE"
-            annotation = f"{operation} {self.symbols.describe(cycle.address)}"
-            if not cycle.read:
-                annotation += f" <= ${cycle.data:02X}"
-            columns = [f"{cycle.raw:<25}", annotation]
-            if index == 0:
-                columns.extend((f"insn: {disassembly}", f"stack: {stack_text}"))
-            print(" | ".join(columns), file=self.output)
-
-        # Apply control-flow effects after printing, ready for the next opcode fetch.
+        # Apply control-flow effects ready for the next opcode fetch.
         if trace.opcode == 0x20:
             target = self._target(trace)
             self.stack.append(
@@ -362,22 +373,22 @@ def analyze_lines(lines: Iterable[str], analyzer: TraceAnalyzer) -> None:
     try:
         for line in lines:
             if "RESET" in line.upper():
-                pending = parser.flush()
-                if pending:
-                    analyzer.render(pending)
+                parser.flush()
                 analyzer.reset()
-                print(line.rstrip("\r\n"), file=analyzer.output)
+                print(line.rstrip("\r\n"), file=analyzer.output, flush=True)
                 continue
 
             completed, cycle = parser.feed(line)
             if completed:
-                analyzer.render(completed)
-            if cycle is None and line.strip():
-                print(line.rstrip("\r\n"), file=analyzer.output)
+                analyzer.complete(completed)
+            if cycle is not None:
+                analyzer.render_cycle(cycle)
+            elif line.strip():
+                print(line.rstrip("\r\n"), file=analyzer.output, flush=True)
     finally:
         pending = parser.flush()
         if pending:
-            analyzer.render(pending)
+            analyzer.complete(pending)
 
 
 def serial_lines(port: str, baud: int, select_monitor: bool, startup_delay: float):

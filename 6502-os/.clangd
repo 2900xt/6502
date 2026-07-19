@@ -1,0 +1,5 @@
+# Base flags live in compile_flags.txt (project-root cwd + --target=avr).
+CompileFlags:
+  Add:
+    - -ffreestanding
+    - -nostdinc

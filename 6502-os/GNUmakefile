@@ -9,9 +9,9 @@ C_SOURCES := $(wildcard src/*.c)
 C_OBJECTS := $(patsubst src/%.c,build/%.o,$(C_SOURCES))
 OBJECTS := build/boot.o $(C_OBJECTS)
 
-CFLAGS := --target none --cpu 65c02 --standard c99 -Oirs -g
+CFLAGS := --target none --cpu 65c02 --standard c99 -Oirs -g -Iinclude
 ASFLAGS := --cpu 65c02 -g
-LDFLAGS := --target none --cpu 65c02 --no-target-lib \
+LDFLAGS := --target none --cpu 65c02 \
 	-C link.cfg -m $(MAP) -Ln $(LABELS)
 
 .PHONY: all clean

@@ -5,7 +5,7 @@ monitor:
   cd console && pio run -t monitor
 
 trace:
-  uv run --with pyserial scripts/trace_monitor.py --port /dev/ttyUSB0
+  uv run --with pyserial scripts/trace_monitor.py --port /dev/ttyUSB0 | less +F -R
 
 test-upload:
   uv run --with pyserial --with tqdm scripts/eeprom_upload.py --port /dev/ttyUSB0 --byte ea
