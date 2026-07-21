@@ -1,5 +1,6 @@
 # 6502 Code Monorepo
 
+<img src="6502.png" alt="Description" style="transform: rotate(90deg); width: 300px;">
 This is all the code I used to debug, test, and build my 6502 breadbaord computer. `./console` is a debugger for the 6502 cpu, while the actual OS on the EEPROM is in `./6502-os`.
 
 # Memory Map
